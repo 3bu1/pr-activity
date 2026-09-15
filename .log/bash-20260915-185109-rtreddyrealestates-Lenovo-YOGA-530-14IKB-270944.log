@@ -1,0 +1,39 @@
+Script started on 2026-09-15 18:51:09+05:30 [COMMAND="/bin/bash -l" TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="76" LINES="35"]
+[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# exitgit push origin master 
+[?2004lfatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git push 
+[?2004lfatal: No configured push destination.
+Either specify the URL from the command-line or configure a remote repository using
+
+    git remote add <name> <url>
+
+and then push using the remote name
+
+    git push <name>
+
+[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# [7mgit remote add origin git@github.com:3bu1/pr-activity.git[27m [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cgit remote add origin git@github.com:3bu1/pr-activity.git [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kt
+[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git remote add origin git@github.com:3bu1/pr-activity.git [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpush [K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C
+[?2004lfatal: The current branch master has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin master
+
+To have this happen automatically for branches without a tracking
+upstream, see 'push.autoSetupRemote' in 'git help config'.
+
+[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git push remote add origin git@github.com:3bu1/pr-activity.git [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpush [K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Corigin master 
+[?2004lgit@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# exit
+[?2004llogout
+
+Script done on 2026-09-15 18:55:13+05:30 [COMMAND_EXIT_CODE="128"]

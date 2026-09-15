@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Approval-gated AI campaign operations." />
+    <title>Campaign Command Center</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark" aria-hidden="true">C</div>
+          <div><p class="eyebrow">MARKETING OPERATIONS</p><h1>Campaign Command Center</h1></div>
+        </div>
+        <div class="topbar-actions"><span id="mode-badge" class="pill">Loading safeguards</span><button id="operator-key" class="button ghost" type="button">Operator key</button></div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow accent">CONTROLLED GROWTH, NOT AUTOPILOT</p>
+            <h2>Turn real offers into reviewed campaigns.</h2>
+            <p class="hero-copy">GPT shapes the strategy. The executor model prepares a constrained connector payload. You approve every spend decision.</p>
+          </div>
+          <div class="agent-flow" aria-label="Campaign operating flow">
+            <div><span>01</span><strong>Brief</strong><small>Offer + audience</small></div><i></i>
+            <div><span>02</span><strong>GPT</strong><small>Strategy + tests</small></div><i></i>
+            <div><span>03</span><strong>Approve</strong><small>Budget + claims</small></div><i></i>
+            <div><span>04</span><strong>Execute</strong><small>Simulate or publish</small></div>
+          </div>
+        </section>
+
+        <section id="safeguards" class="notice" aria-live="polite"></section>
+        <section class="metric-grid" aria-label="Revenue metrics">
+          <article><p>Revenue attributed</p><strong id="metric-revenue">—</strong><small>Sales recorded in this workspace</small></article>
+          <article><p>Spend recorded</p><strong id="metric-spend">—</strong><small>Campaign spend imported or entered</small></article>
+          <article><p>ROAS</p><strong id="metric-roas">—</strong><small>Revenue ÷ spend</small></article>
+          <article><p>Qualified actions</p><strong id="metric-leads">—</strong><small>Leads and conversions</small></article>
+        </section>
+
+        <section class="section-block product-block">
+          <div class="section-heading"><div><p class="eyebrow">PRODUCT CATALOG</p><h2>Add the real offer before you market it</h2></div><span class="step-tag">Commercial source of truth</span></div>
+          <form id="product-form" class="product-form">
+            <input name="name" required minlength="3" placeholder="Product or service name" />
+            <select name="kind"><option value="service">Service</option><option value="product">Product</option><option value="subscription">Subscription</option></select>
+            <input name="price" type="number" min="0" step="0.01" required placeholder="Price" />
+            <input name="grossMargin" type="number" min="0" max="100" step="1" required placeholder="Margin %" />
+            <input name="capacity" required minlength="2" placeholder="Inventory or delivery capacity" />
+            <input name="proof" required minlength="2" placeholder="Approved proof / substantiation" />
+            <button class="button secondary" type="submit">Add offer</button>
+          </form>
+        </section>
+
+        <div class="workspace-grid">
+          <section class="panel campaign-builder">
+            <div class="section-heading"><div><p class="eyebrow">NEW CAMPAIGN</p><h2>Build the commercial brief</h2></div><span class="step-tag">1 / 4</span></div>
+            <form id="campaign-form" class="form-grid">
+              <label>Campaign name<input name="name" required minlength="3" placeholder="e.g. September product launch" /></label>
+              <label>Offer / product<select id="campaign-product" name="productId" required></select></label>
+              <label>Objective<select name="goal"><option value="sales">Sales</option><option value="leads">Qualified leads</option><option value="retention">Retention</option><option value="awareness">Awareness</option></select></label>
+              <label>Daily budget<input name="dailyBudget" type="number" min="1" step="1" required placeholder="50" /></label>
+              <label class="span-2">Primary audience<textarea name="audience" required minlength="8" placeholder="Who has the problem, what triggers purchase, and what qualification matters?"></textarea></label>
+              <label class="span-2">Offer and approved claim<textarea name="offer" required minlength="3" placeholder="Describe the offer, pricing/terms, and only claims that are substantiated."></textarea></label>
+              <fieldset class="span-2 channel-picker"><legend>Channels</legend><div id="channel-options"></div></fieldset>
+              <button class="button primary span-2" type="submit">Create campaign brief <span>→</span></button>
+            </form>
+          </section>
+
+          <aside class="panel launch-rules">
+            <p class="eyebrow">LAUNCH GATE</p><h2>Every campaign must pass four checks.</h2>
+            <ol>
+              <li><span>1</span><div><strong>Commercial truth</strong><p>Real offer, capacity, pricing, proof.</p></div></li>
+              <li><span>2</span><div><strong>Budget boundary</strong><p>Daily cap is enforced server-side.</p></div></li>
+              <li><span>3</span><div><strong>Human approval</strong><p>Approval occurs before payload creation.</p></div></li>
+              <li><span>4</span><div><strong>Explicit run</strong><p>Type <code>RUN</code>; simulation is the default.</p></div></li>
+            </ol>
+            <p class="muted">Channel tokens are represented as secure environment-variable references and are never displayed here.</p>
+          </aside>
+        </div>
+
+        <section class="section-block">
+          <div class="section-heading"><div><p class="eyebrow">CAMPAIGN QUEUE</p><h2>Review and operate</h2></div><span id="campaign-count" class="step-tag">0 campaigns</span></div>
+          <div id="campaign-list" class="campaign-list"><div class="empty-state">No campaigns yet. Create a brief above to begin.</div></div>
+        </section>
+
+        <div class="lower-grid">
+          <section class="panel feedback-panel">
+            <div class="section-heading"><div><p class="eyebrow">VOICE OF CUSTOMER</p><h2>Feedback intelligence</h2></div><span id="feedback-count" class="step-tag">0 items</span></div>
+            <div id="theme-list" class="theme-list"><p class="muted">Feedback themes will appear here after the first entry.</p></div>
+            <form id="feedback-form" class="compact-form">
+              <select id="feedback-product" name="productId" required></select><select name="sentiment"><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select>
+              <input name="source" required placeholder="Source: review, call, support" /><input name="themes" required placeholder="Themes, comma separated" />
+              <textarea name="text" required minlength="3" placeholder="What did the customer actually say?"></textarea><button class="button secondary" type="submit">Record feedback</button>
+            </form>
+          </section>
+          <section class="panel activity-panel"><div class="section-heading"><div><p class="eyebrow">AUDIT TRAIL</p><h2>Operator activity</h2></div></div><div id="activity-list" class="activity-list"><p class="muted">Loading activity…</p></div></section>
+        </div>
+
+        <section class="section-block connector-block">
+          <div class="section-heading"><div><p class="eyebrow">INTEGRATIONS</p><h2>Connector readiness</h2></div><span class="step-tag">Generic REST adapter</span></div>
+          <p class="muted connector-copy">Configure the provider's API base URL and the name of its server-side token variable. This generic adapter is suitable for internal/test endpoints; production ad platforms need a provider-specific OAuth adapter.</p>
+          <div id="connector-list" class="connector-list"></div>
+        </section>
+      </main>
+    </div>
+    <dialog id="plan-dialog" class="plan-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close campaign detail">×</button><div id="plan-content"></div></form></dialog>
+    <dialog id="metrics-dialog" class="plan-dialog"><form id="metrics-form" method="dialog"><button class="dialog-close" aria-label="Close campaign results">×</button><p class="eyebrow">OBSERVED RESULTS</p><h2 id="metrics-title">Record campaign results</h2><input id="metrics-campaign-id" type="hidden" /><div class="metrics-form"><label>Spend<input name="spend" type="number" min="0" step="0.01" required /></label><label>Qualified leads<input name="leads" type="number" min="0" step="1" required /></label><label>Conversions<input name="conversions" type="number" min="0" step="1" required /></label><label>Revenue<input name="revenue" type="number" min="0" step="0.01" required /></label></div><button class="button primary" type="submit">Save results</button></form></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
