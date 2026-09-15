@@ -1,55 +1,0 @@
-Script started on 2026-09-15 18:49:31+05:30 [COMMAND="/bin/bash -l" TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="76" LINES="35"]
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git init
-[?2004l[33mhint: Using 'master' as the name for the initial branch. This default branch name[m
-[33mhint: is subject to change. To configure the initial branch name to use in all[m
-[33mhint: of your new repositories, which will suppress this warning, call:[m
-[33mhint: [m
-[33mhint: 	git config --global init.defaultBranch <name>[m
-[33mhint: [m
-[33mhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and[m
-[33mhint: 'development'. The just-created branch can be renamed via this command:[m
-[33mhint: [m
-[33mhint: 	git branch -m <name>[m
-Initialized empty Git repository in /home/rtreddy-realestates/workspace/pr-activity/.git/
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git status 
-[?2004lOn branch master
-
-No commits yet
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	[31m.env.example[m
-	[31m.gitignore[m
-	[31m.log/[m
-	[31mREADME.md[m
-	[31mpackage.json[m
-	[31mpublic/[m
-	[31mserver.mjs[m
-	[31mtest/[m
-
-nothing added to commit but untracked files present (use "git add" to track)
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git add .
-[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# got [K[K[Kit commit -m ""i"n"i"t"a"l" "c"o"m"m"i"t"
-[?2004l[master (root-commit) 231a57c] inital commit
- 11 files changed, 1141 insertions(+)
- create mode 100644 .env.example
- create mode 100644 .gitignore
- create mode 100644 .log/bash-20260915-184931-rtreddyrealestates-Lenovo-YOGA-530-14IKB-269625.log
- create mode 100644 README.md
- create mode 100644 package.json
- create mode 100644 public/app.js
- create mode 100644 public/favicon.svg
- create mode 100644 public/index.html
- create mode 100644 public/styles.css
- create mode 100644 server.mjs
- create mode 100644 test/campaign-flow.test.mjs
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git push orim[Kgin master 
-[?2004lfatal: 'origin' does not appear to be a git repository
-fatal: Could not read from remote repository.
-
-Please make sure you have the correct access rights
-and the repository exists.
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# exit
-[?2004llogout
-
-Script done on 2026-09-15 18:50:26+05:30 [COMMAND_EXIT_CODE="128"]

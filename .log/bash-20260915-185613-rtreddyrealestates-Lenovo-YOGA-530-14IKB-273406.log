@@ -1,41 +1,0 @@
-Script started on 2026-09-15 18:56:13+05:30 [COMMAND="/bin/bash -l" TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="76" LINES="35"]
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git checkout main-mainbmain main
-[?2004lSwitched to a new branch 'main'
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git push origin main
-[?2004lgit@github.com: Permission denied (publickey).
-fatal: Could not read from remote repository.
-
-Please make sure you have the correct access rights
-and the repository exists.
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# rm  -rd .git
-[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# rm  -rd .git[1P .gitf .git
-[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# gst[K[Ki [Kt status 
-[?2004lfatal: not a git repository (or any of the parent directories): .git
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git a[Kinit[K[K[K[K[K[K[K[Kgit init
-[?2004l[33mhint: Using 'master' as the name for the initial branch. This default branch name[m
-[33mhint: is subject to change. To configure the initial branch name to use in all[m
-[33mhint: of your new repositories, which will suppress this warning, call:[m
-[33mhint: [m
-[33mhint: 	git config --global init.defaultBranch <name>[m
-[33mhint: [m
-[33mhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and[m
-[33mhint: 'development'. The just-created branch can be renamed via this command:[m
-[33mhint: [m
-[33mhint: 	git branch -m <name>[m
-Initialized empty Git repository in /home/rtreddy-realestates/workspace/pr-activity/.git/
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git push [K[K[K[K[K[7mgit branch -M main[27mgit branch -M main
-[?2004lgit: 'git' is not a git command. See 'git --help'.
-
-The most similar command is
-	init
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# git git branch -M main[C[C[C[1P[1P[1P[1P
-[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# [7mgit remote add origin git@github.com:3bu1/pr-activity.git[27m [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cgit remote add origin git@github.com:3bu1/pr-activity.git [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kt
-[?2004l[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# [7mgit push -u origin main[27m[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cgit push -u origin main
-[?2004lerror: src refspec main does not match any
-[31merror: failed to push some refs to 'github.com:3bu1/pr-activity.git'
-[m[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# exxit
-[?2004lexxit: command not found
-[?2004h]0;root@rtreddyrealestates-Lenovo-YOGA-530-14IKB: /home/rtreddy-realestates/workspace/pr-activityroot@rtreddyrealestates-Lenovo-YOGA-530-14IKB:/home/rtreddy-realestates/workspace/pr-activity# exit
-[?2004llogout
-
-Script done on 2026-09-15 19:04:53+05:30 [COMMAND_EXIT_CODE="127"]
