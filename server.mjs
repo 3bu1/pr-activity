@@ -4,6 +4,9 @@ import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { databaseEnabled, context, pool, migrate, withBusiness, loadDatabaseStore, saveDatabaseStore, requireRole, httpError, members, rateLimit as databaseRateLimit } from './lib/database.mjs';
+import { authenticate, authAction, checkOrigin } from './lib/auth.mjs';
+import { enqueue, listJobs, cancelJob, startQueue, stopQueue } from './lib/jobs.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(here, "public");
@@ -38,7 +41,9 @@ function now() {
 
 function seedStore() {
   return {
+    businesses: [{ id: "default-business", name: "Default workspace", industry: "", audience: "", geography: "", language: "English", tone: "Clear and factual", currency: "USD", channels: ["meta"], dailyBudget: 25 }],
     products: [{
+      businessId: "default-business",
       id: "demo-offer",
       name: "Demo offer — replace before launch",
       kind: "service",
@@ -61,28 +66,38 @@ function seedStore() {
 }
 
 async function loadStore() {
+  if (databaseEnabled) return loadDatabaseStore(seedStore());
   if (!existsSync(storePath)) return seedStore();
   try {
     const parsed = JSON.parse(await readFile(storePath, "utf8"));
-    return { ...seedStore(), ...parsed };
+    const store = { ...seedStore(), ...parsed };
+    for (const product of store.products) product.businessId ||= "default-business";
+    for (const campaign of store.campaigns) campaign.businessId ||= store.products.find((product) => product.id === campaign.productId)?.businessId || "default-business";
+    return store;
   } catch {
     throw new Error("Campaign store is unreadable. Restore data/store.json from a backup before writing.");
   }
 }
 
 async function saveStore(store) {
-  await mkdir(dataDir, { recursive: true });
+  if (databaseEnabled) return saveDatabaseStore(store);
+  await mkdir(path.dirname(storePath), { recursive: true });
   const tempPath = `${storePath}.${randomUUID()}.tmp`;
   await writeFile(tempPath, `${JSON.stringify(store, null, 2)}\n`, { mode: 0o600 });
   await rename(tempPath, storePath);
 }
 
 function record(store, type, message, metadata = {}) {
+  if (databaseEnabled) metadata.actorId = context.getStore()?.user.id;
   store.activity.unshift({ id: randomUUID(), at: now(), type, message, metadata });
   store.activity = store.activity.slice(0, 100);
 }
 
 function reply(res, status, payload) {
+  if (databaseEnabled && context.getStore()) {
+    context.getStore().response = { status, payload };
+    return;
+  }
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
@@ -148,6 +163,11 @@ function hasAdminAccess(req, { required = false } = {}) {
 }
 
 function requireOperator(req, res, { live = false } = {}) {
+  if (databaseEnabled) {
+    if (req.method === 'POST' && req.url === '/api/businesses') return true;
+    requireRole('owner', 'editor');
+    return true;
+  }
   if (!hasAdminAccess(req, { required: live })) {
     fail(res, 401, "Operator authorization is required for this action.");
     return false;
@@ -178,6 +198,26 @@ function publicConnector(connector) {
   };
 }
 
+function findBusiness(store, id) {
+  const business = store.businesses.find((entry) => entry.id === id);
+  if (!business) throw new Error("Business not found.");
+  return business;
+}
+
+function normalizeBusiness(input) {
+  const currency = sanitizeText(input.currency || "USD", "Currency", { min: 3, max: 3 }).toUpperCase();
+  if (!Intl.supportedValuesOf("currency").includes(currency)) throw new Error("Unsupported currency.");
+  const channels = sanitizeArray(input.channels, "Channels");
+  if (channels.some((id) => !DEFAULT_CONNECTORS.some((connector) => connector.id === id))) throw new Error("Unsupported channel.");
+  return {
+    name: sanitizeText(input.name, "Business name", { min: 2, max: 100 }),
+    ...Object.fromEntries(["industry", "audience", "geography", "language", "tone"].map((field) => [field, sanitizeText(input[field] ?? "", field, { min: 0, max: 400 })])),
+    currency, channels,
+    dailyBudget: safeNumber(input.dailyBudget, "Daily budget", { min: 1, max: maxDailyBudget }),
+    updatedAt: now(),
+  };
+}
+
 function normalizeCampaign(input) {
   const goal = sanitizeText(input.goal, "Goal", { min: 3, max: 30 }).toLowerCase();
   if (!ALLOWED_GOALS.includes(goal)) throw new Error(`Goal must be one of: ${ALLOWED_GOALS.join(", ")}.`);
@@ -204,7 +244,8 @@ function fallbackPlan(campaign, product) {
   return {
     positioning: `Lead with the specific outcome of ${product.name}; avoid claims not supported by the listed proof.`,
     primaryMessage: headline,
-    creativeBrief: "Use a clear product/service image, one concrete benefit, proof where available, and one action-oriented CTA.",
+    creativeBrief: `Use a clear product/service image, one concrete benefit, proof where available, and one action-oriented CTA. Language: ${campaign.businessSnapshot?.language || "unspecified"}. Tone: ${campaign.businessSnapshot?.tone || "unspecified"}. Market: ${campaign.businessSnapshot?.geography || "unspecified"}.`,
+    businessContext: campaign.businessSnapshot || null,
     landingPageBrief: `Show offer terms, price or qualification path, proof, delivery details, and a single ${campaign.goal} CTA.`,
     experiments: [
       { hypothesis: "A proof-led message will outperform a feature-led message.", variable: "Message angle", successMetric: campaign.goal === "sales" ? "conversion rate" : "qualified leads" },
@@ -277,6 +318,8 @@ async function createPlan(campaign, product) {
 
 function fallbackPayload(campaign) {
   return {
+    businessId: campaign.businessId,
+    currency: campaign.businessSnapshot?.currency || "USD",
     name: campaign.name,
     objective: campaign.goal,
     audience: campaign.audience,
@@ -339,6 +382,9 @@ function dashboard(store) {
     },
     campaigns: store.campaigns,
     products: store.products,
+    businesses: store.businesses,
+    selectedBusinessId: context.getStore()?.businessId || null,
+    databaseMode: databaseEnabled,
     feedback: store.feedback,
     feedbackThemes: Object.entries(feedbackThemes).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([theme, count]) => ({ theme, count })),
     connectors: store.connectors.map(publicConnector),
@@ -395,19 +441,45 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-export function createApp() {
-  return createServer(async (req, res) => {
+let mutationQueue = Promise.resolve();
+
+async function handleRequest(req, res) {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     const pathname = url.pathname;
+    let release;
+    if (!databaseEnabled && ["POST", "PUT", "DELETE"].includes(req.method)) {
+      const previous = mutationQueue;
+      mutationQueue = new Promise((resolve) => { release = resolve; });
+      await previous;
+    }
     try {
       if (req.method === "GET" && pathname === "/api/health") return reply(res, 200, { ok: true, liveMode, store: existsSync(storePath) ? "ready" : "will initialize on first write" });
       if (req.method === "GET" && pathname === "/api/dashboard") return reply(res, 200, dashboard(await loadStore()));
+      if (databaseEnabled && pathname === '/api/members') return reply(res, 200, { members: await members(req.method, await readJson(req)) });
+      if (databaseEnabled && pathname === '/api/jobs' && req.method === 'GET') return reply(res, 200, { jobs: await listJobs() });
+      if (databaseEnabled && /^\/api\/jobs\/[\w-]+\/cancel$/.test(pathname) && req.method === 'POST') return reply(res, 200, await cancelJob(pathname.split('/')[3]));
+
+      if ((req.method === "POST" && pathname === "/api/businesses") ||
+          (req.method === "PUT" && /^\/api\/businesses\/[\w-]+$/.test(pathname))) {
+        if (!requireOperator(req, res)) return;
+        const input = await readJson(req);
+        const store = await loadStore();
+        const settings = normalizeBusiness(input);
+        const business = req.method === "PUT" ? findBusiness(store, pathname.split("/").at(-1)) : { id: randomUUID(), createdAt: now() };
+        if (business.currency && business.currency !== settings.currency && store.products.some((product) => product.businessId === business.id)) throw new Error("Currency cannot change after offers exist. Create a separate business profile for another currency.");
+        Object.assign(business, settings);
+        if (req.method === "POST") store.businesses.push(business);
+        record(store, "business", `Saved business: ${business.name}`, { businessId: business.id });
+        await saveStore(store);
+        return reply(res, req.method === "POST" ? 201 : 200, { business });
+      }
 
       if (req.method === "POST" && pathname === "/api/products") {
         if (!requireOperator(req, res)) return;
         const input = await readJson(req);
         const store = await loadStore();
         const product = {
+          businessId: findBusiness(store, input.businessId || context.getStore()?.businessId || "default-business").id,
           id: randomUUID(), name: sanitizeText(input.name, "Product name", { min: 3, max: 100 }),
           kind: sanitizeText(input.kind || "product", "Product type", { min: 3, max: 30 }),
           price: safeNumber(input.price, "Price", { min: 0, max: 1_000_000 }),
@@ -422,8 +494,14 @@ export function createApp() {
       if (req.method === "POST" && pathname === "/api/campaigns") {
         if (!requireOperator(req, res)) return;
         const store = await loadStore();
-        const campaign = normalizeCampaign(await readJson(req));
-        findProduct(store, campaign.productId);
+        const input = await readJson(req);
+        const product = findProduct(store, input.productId);
+        const business = findBusiness(store, input.businessId || product.businessId);
+        if (product.businessId !== business.id) throw new Error("Offer belongs to a different business.");
+        const campaign = normalizeCampaign({ ...input, audience: input.audience || business.audience, channels: input.channels ?? business.channels, dailyBudget: input.dailyBudget ?? business.dailyBudget });
+        if (campaign.channels.some((id) => !store.connectors.some((connector) => connector.id === id))) throw new Error("Unsupported channel.");
+        campaign.businessId = business.id;
+        campaign.businessSnapshot = structuredClone(business);
         store.campaigns.unshift(campaign); record(store, "campaign", `Created draft: ${campaign.name}`, { campaignId: campaign.id }); await saveStore(store);
         return reply(res, 201, { campaign });
       }
@@ -432,21 +510,30 @@ export function createApp() {
       if (req.method === "POST" && campaignAction) {
         const [, campaignId, action] = campaignAction;
         if (!requireOperator(req, res, { live: action === "run" && liveMode })) return;
-        if ((action === "plan" || action === "prepare") && !rateLimit(req)) return fail(res, 429, "AI request limit reached. Try again in one minute.");
+        if (action === 'plan' || action === 'prepare') {
+          if (databaseEnabled) await databaseRateLimit('ai:' + context.getStore().user.id, 12);
+          else if (!rateLimit(req)) return fail(res, 429, "AI request limit reached. Try again in one minute.");
+        }
         const input = await readJson(req);
         const store = await loadStore();
         const campaign = findCampaign(store, campaignId);
         const product = findProduct(store, campaign.productId);
+        if (databaseEnabled && ['approve', 'run'].includes(action)) requireRole('owner');
+        if (databaseEnabled && ['plan', 'prepare', 'run'].includes(action)) {
+          const job = await enqueue(campaign, action, input);
+          return reply(res, 202, { job, campaign });
+        }
 
         if (action === "plan") {
           if (!["draft", "planned"].includes(campaign.status)) throw new Error("Only draft or planned campaigns can be re-planned.");
+          campaign.businessSnapshot = structuredClone(findBusiness(store, campaign.businessId));
           campaign.plan = await createPlan(campaign, product); campaign.status = "planned"; campaign.updatedAt = now();
           record(store, "ai-plan", `GPT planned: ${campaign.name}`, { campaignId }); await saveStore(store);
           return reply(res, 200, { campaign });
         }
         if (action === "approve") {
           if (campaign.status !== "planned") throw new Error("Only a planned campaign can be approved.");
-          campaign.status = "approved"; campaign.approvedAt = now(); campaign.approvedBy = sanitizeText(input.approvedBy || "operator", "Approver", { min: 2, max: 80 }); campaign.updatedAt = now();
+          campaign.status = "approved"; campaign.approvedAt = now(); campaign.approvedBy = context.getStore()?.user.email || sanitizeText(input.approvedBy || "operator", "Approver", { min: 2, max: 80 }); campaign.updatedAt = now();
           record(store, "approval", `Approved: ${campaign.name}`, { campaignId, approvedBy: campaign.approvedBy }); await saveStore(store);
           return reply(res, 200, { campaign });
         }
@@ -487,11 +574,13 @@ export function createApp() {
 
       if (req.method === "PUT" && /^\/api\/connectors\/[\w-]+$/.test(pathname)) {
         if (!requireOperator(req, res)) return;
+        if (databaseEnabled) requireRole('owner');
         const id = pathname.split("/").at(-1); const input = await readJson(req); const store = await loadStore();
         const connector = store.connectors.find((entry) => entry.id === id);
         if (!connector) throw new Error("Connector not found.");
         connector.apiBaseUrl = input.apiBaseUrl ? new URL(sanitizeText(input.apiBaseUrl, "API base URL", { min: 8, max: 300 })).toString() : "";
         connector.secretRef = secretReference(input.secretRef || connector.secretRef); connector.updatedAt = now();
+        if (databaseEnabled && !connector.secretRef.startsWith(`MARKETING_${context.getStore().businessId.replaceAll('-', '').toUpperCase()}_`)) throw httpError(422, 'Use a secret reference belonging to this business.');
         record(store, "connector", `Updated connector: ${connector.name}`, { connectorId: connector.id }); await saveStore(store);
         return reply(res, 200, { connector: publicConnector(connector) });
       }
@@ -513,13 +602,103 @@ export function createApp() {
       if (pathname.startsWith("/api/")) return fail(res, 404, "API route not found.");
       return serveStatic(req, res, pathname);
     } catch (error) {
+      if (databaseEnabled) throw error;
       const status = error instanceof TypeError ? 400 : 422;
       return fail(res, status, error.message || "Unexpected server error.");
+    } finally {
+      release?.();
     }
+}
+
+export async function performQueuedAction(job) {
+  const user = (await pool.query('SELECT id,email FROM app_users WHERE id=$1', [job.userId])).rows[0];
+  if (!user) throw httpError(403, 'The requesting user no longer exists.');
+  return withBusiness(user, job.businessId, true, async () => {
+    requireRole(...(job.action === 'run' ? ['owner'] : ['owner', 'editor']));
+    const { client } = context.getStore();
+    const state = (await client.query('SELECT state FROM app_jobs WHERE id=$1 FOR UPDATE', [job.id])).rows[0]?.state;
+    if (state !== 'queued') return;
+    const store = await loadStore();
+    const campaign = findCampaign(store, job.campaignId);
+    const product = findProduct(store, campaign.productId);
+    if (job.action === 'plan') {
+      if (!['draft', 'planned'].includes(campaign.status)) throw httpError(409, 'Campaign is no longer available for planning.');
+      campaign.businessSnapshot = structuredClone(findBusiness(store, campaign.businessId));
+      campaign.plan = await createPlan(campaign, product);
+      campaign.status = 'planned';
+    } else if (job.action === 'prepare') {
+      if (campaign.status !== 'approved') throw httpError(409, 'Campaign must be approved.');
+      campaign.execution = { payload: await createExecutionPayload(campaign, product), preparedAt: now(), results: [] };
+      campaign.status = 'prepared';
+    } else {
+      if (campaign.status !== 'prepared') throw httpError(409, 'Campaign must be prepared.');
+      if (campaign.dailyBudget > maxDailyBudget) throw httpError(422, 'Campaign exceeds the server budget cap.');
+      if (liveMode) throw httpError(422, 'Live delivery requires a verified provider adapter.');
+      campaign.execution.results = campaign.channels.map((id) => ({ connectorId: id, mode: 'simulation', payloadAccepted: true }));
+      campaign.status = 'simulated';
+    }
+    campaign.updatedAt = now();
+    record(store, 'job', `Completed ${job.action}: ${campaign.name}`, { campaignId: campaign.id, jobId: job.id });
+    await saveStore(store);
+    await client.query("UPDATE app_jobs SET state='completed',completed_at=now() WHERE id=$1", [job.id]);
   });
 }
 
+export function createApp() {
+  if (databaseEnabled && liveMode) throw new Error('Database mode currently supports reviewed simulations. Live mode requires a verified provider adapter.');
+  if (process.env.NODE_ENV === 'production' && (!databaseEnabled || !process.env.APP_ORIGIN?.startsWith('https://'))) throw new Error('Production requires DATABASE_URL and an HTTPS APP_ORIGIN.');
+  const app = createServer(async (req, res) => {
+    const requestId = randomUUID();
+    res.setHeader('x-request-id', requestId);
+    res.setHeader('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+    const pathname = new URL(req.url || '/', 'http://localhost').pathname;
+    if (!databaseEnabled) return handleRequest(req, res);
+    try {
+      if (pathname === '/api/health' && req.method === 'GET') {
+        await pool.query('SELECT version FROM app_migrations WHERE version=1');
+        return reply(res, 200, { ok: true, database: 'postgresql', liveMode: false });
+      }
+      if (pathname === '/api/ready' && req.method === 'GET') {
+        const ready = (await pool.query("SELECT id FROM app_worker_health WHERE seen_at > now()-interval '30 seconds' LIMIT 1")).rowCount > 0;
+        return reply(res, ready ? 200 : 503, { ok: ready, database: 'postgresql', worker: ready ? 'ready' : 'unavailable' });
+      }
+      if (pathname === '/api/auth/config' && req.method === 'GET') return reply(res, 200, { required: true, signup: process.env.ALLOW_SIGNUP === 'true' });
+      const auth = pathname.match(/^\/api\/auth\/(login|register|logout)$/);
+      if (auth && req.method === 'POST') return reply(res, 200, await authAction(req, res, auth[1], await readJson(req)));
+      if (!pathname.startsWith('/api/')) return serveStatic(req, res, pathname);
+      let user;
+      try { user = await authenticate(req); }
+      catch (error) {
+        if (pathname === '/api/auth/me' && req.method === 'GET' && error.status === 401) return reply(res, 200, { user: null });
+        throw error;
+      }
+      if (pathname === '/api/auth/me' && req.method === 'GET') return reply(res, 200, { user });
+      const write = !['GET', 'HEAD'].includes(req.method);
+      if (write) checkOrigin(req);
+      const response = await withBusiness(user, req.headers['x-business-id'], write, async () => {
+        await handleRequest(req, res);
+        return context.getStore().response;
+      });
+      reply(res, response.status, response.payload);
+    } catch (error) {
+      const status = error.status || (error.code ? 500 : 422);
+      if (status >= 500) console.error(JSON.stringify({ event: 'request_failed', requestId, code: error.code || 'INTERNAL' }));
+      reply(res, status, { error: status >= 500 ? 'Request failed. Please retry or contact the operator.' : error.message, requestId });
+    }
+  });
+  app.requestTimeout = 30000;
+  app.headersTimeout = 15000;
+  return app;
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  if (databaseEnabled) { await migrate(); await startQueue(); }
   const app = createApp();
-  app.listen(port, () => console.log(`Campaign Command Center running at http://localhost:${port}`));
+  app.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`PR Activity running at http://localhost:${port}`));
+  let shuttingDown = false;
+  for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    app.close(async () => { await stopQueue(); await pool?.end(); process.exit(0); });
+  });
 }

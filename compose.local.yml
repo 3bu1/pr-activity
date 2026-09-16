@@ -1,0 +1,18 @@
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pr_activity
+      POSTGRES_PASSWORD: pr_activity_local_only
+      POSTGRES_DB: pr_activity
+    ports:
+      - "127.0.0.1:55470:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pr_activity -d pr_activity"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  database:

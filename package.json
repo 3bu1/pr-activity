@@ -6,9 +6,18 @@
   "scripts": {
     "dev": "node --watch server.mjs",
     "start": "node server.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "local": "node --env-file=.env.local scripts/local.mjs",
+    "worker": "node worker.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "user": "node scripts/user.mjs",
+    "test:database": "node --env-file=.env.local --test test/production-workflow.test.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
+  },
+  "dependencies": {
+    "pg": "^8.23.0",
+    "pg-boss": "^12.32.0"
   }
 }

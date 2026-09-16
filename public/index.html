@@ -4,22 +4,53 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Approval-gated AI campaign operations." />
-    <title>Campaign Command Center</title>
+    <title>PR Activity</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <section id="auth-screen" class="auth-screen" hidden>
+      <h1>PR Activity</h1>
+      <h2 id="auth-title">Sign in</h2>
+      <form id="auth-form" class="form-grid">
+        <label class="span-2">Email<input name="email" type="email" autocomplete="username" required /></label>
+        <label class="span-2">Password<input name="password" type="password" autocomplete="current-password" minlength="12" maxlength="200" required /></label>
+        <button class="button primary" type="submit">Sign in</button>
+        <button class="button ghost" id="auth-switch" type="button">Create account</button>
+        <p id="auth-error" class="span-2" role="alert"></p>
+      </form>
+    </section>
     <div class="app-shell">
       <header class="topbar">
         <div class="brand-wrap">
           <div class="brand-mark" aria-hidden="true">C</div>
-          <div><p class="eyebrow">MARKETING OPERATIONS</p><h1>Campaign Command Center</h1></div>
+          <div><p class="eyebrow">MARKETING OPERATIONS</p><h1>PR Activity</h1></div>
         </div>
-        <div class="topbar-actions"><span id="mode-badge" class="pill">Loading safeguards</span><button id="operator-key" class="button ghost" type="button">Operator key</button></div>
+        <div class="topbar-actions"><span id="mode-badge" class="pill">Loading safeguards</span><button id="operator-key" class="button ghost" type="button">Operator key</button><button id="sign-out" class="button ghost" type="button" hidden>Sign out</button></div>
       </header>
 
       <main>
-        <section class="hero">
+        <section class="section-block">
+          <div class="section-heading"><label>Business<select id="business-select"></select></label><button id="new-business" class="button secondary" type="button">New business</button></div>
+          <details id="business-editor">
+            <summary>Business settings</summary>
+            <form id="business-form" class="form-grid">
+              <input name="id" type="hidden" />
+              <label>Name<input name="name" required minlength="2" maxlength="100" /></label>
+              <label>Industry<input name="industry" maxlength="400" /></label>
+              <label>Geography<input name="geography" maxlength="400" /></label>
+              <label>Language<input name="language" maxlength="400" /></label>
+              <label>Brand tone<input name="tone" maxlength="400" /></label>
+              <label>Currency<input name="currency" required minlength="3" maxlength="3" value="USD" /></label>
+              <label class="span-2">Default audience<textarea name="audience" maxlength="400"></textarea></label>
+              <label>Default daily budget<input name="dailyBudget" type="number" min="1" step="0.01" required /></label>
+              <fieldset class="channel-picker"><legend>Default channels</legend><div id="business-channels"></div></fieldset>
+              <button class="button primary" type="submit">Save business</button>
+              <button id="cancel-business" class="button ghost" type="button">Cancel</button>
+            </form>
+          </details>
+        </section>
+        <section class="hero" hidden>
           <div>
             <p class="eyebrow accent">CONTROLLED GROWTH, NOT AUTOPILOT</p>
             <h2>Turn real offers into reviewed campaigns.</h2>
@@ -104,11 +135,33 @@
           <p class="muted connector-copy">Configure the provider's API base URL and the name of its server-side token variable. This generic adapter is suitable for internal/test endpoints; production ad platforms need a provider-specific OAuth adapter.</p>
           <div id="connector-list" class="connector-list"></div>
         </section>
+        <section id="jobs-section" class="section-block" hidden>
+          <div class="section-heading"><h2>Campaign jobs</h2><button id="refresh-jobs" class="button ghost" type="button">Refresh</button></div>
+          <div id="job-list"></div>
+        </section>
+        <section id="team-section" class="section-block" hidden>
+          <h2>Business team</h2>
+          <form id="member-form" class="compact-form">
+            <label>Email<input name="email" type="email" required /></label>
+            <label>Role<select name="role"><option value="editor">Editor</option><option value="viewer">Viewer</option></select></label>
+            <button class="button secondary" type="submit">Grant access</button>
+          </form>
+          <div id="member-list"></div>
+        </section>
       </main>
     </div>
     <dialog id="plan-dialog" class="plan-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close campaign detail">×</button><div id="plan-content"></div></form></dialog>
     <dialog id="metrics-dialog" class="plan-dialog"><form id="metrics-form" method="dialog"><button class="dialog-close" aria-label="Close campaign results">×</button><p class="eyebrow">OBSERVED RESULTS</p><h2 id="metrics-title">Record campaign results</h2><input id="metrics-campaign-id" type="hidden" /><div class="metrics-form"><label>Spend<input name="spend" type="number" min="0" step="0.01" required /></label><label>Qualified leads<input name="leads" type="number" min="0" step="1" required /></label><label>Conversions<input name="conversions" type="number" min="0" step="1" required /></label><label>Revenue<input name="revenue" type="number" min="0" step="0.01" required /></label></div><button class="button primary" type="submit">Save results</button></form></dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="schedule-dialog" class="plan-dialog">
+      <form id="schedule-form" class="form-grid">
+        <h2 class="span-2">Schedule campaign run</h2>
+        <label class="span-2">Start time<input name="scheduledAt" type="datetime-local" required /></label>
+        <label class="span-2">Confirmation<input name="confirmation" placeholder="RUN" pattern="RUN" required /></label>
+        <button class="button primary" type="submit">Schedule</button>
+        <button id="cancel-schedule" class="button ghost" type="button">Cancel</button>
+      </form>
+    </dialog>
     <script type="module" src="/app.js"></script>
   </body>
 </html>
